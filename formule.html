@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<title>Вежбање хемијских формула</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align:center; }
+  h2 { color: darkblue; }
+  #level-info { font-weight: bold; margin: 15px; font-size: 18px; }
+  .container { display: flex; justify-content: space-around; margin-top:20px; }
+  .column { width: 45%; }
+  .item { display: block; margin: 8px; padding: 8px; border: 1px solid #ccc; cursor: pointer; }
+  .selected { border: 2px solid blue; background-color: #eef; }
+  .correct { background-color: lightgreen; color: green; }
+  .wrong { background-color: pink; color: red; }
+</style>
+</head>
+<body>
+<h2>Споји хемијску формулу са називом</h2>
+<div id="level-info"></div>
+<div class="container">
+  <div id="formulas" class="column"></div>
+  <div id="names" class="column"></div>
+</div>
+<div id="message"></div>
+
+<script>
+// функција за субскрипт
+function formatFormula(str) {
+  return str.replace(/([0-9]+)/g, "<sub>$1</sub>");
+}
+
+const levels = [
+  {name:"Оксиди", items:[
+    {formula:"CO", name:"угљеник(II)-оксид"},
+    {formula:"CO2", name:"угљеник(IV)-оксид"},
+    {formula:"SO2", name:"сумпор(IV)-оксид"},
+    {formula:"SO3", name:"сумпор(VI)-оксид"}
+  ]},
+  {name:"Киселине", items:[
+    {formula:"HCl", name:"хлороводонична киселина"},
+    {formula:"HBr", name:"бромоводонична киселина"},
+    {formula:"HI", name:"јодоводонична киселина"},
+    {formula:"H2SO4", name:"сумпорна киселина"}
+  ]},
+  {name:"Базе", items:[
+    {formula:"NaOH", name:"натријум-хидроксид"},
+    {formula:"KOH", name:"калијум-хидроксид"},
+    {formula:"Ca(OH)2", name:"калцијум-хидроксид"},
+    {formula:"Mg(OH)2", name:"магнезијум-хидроксид"}
+  ]},
+  {name:"Соли", items:[
+    {formula:"NaCl", name:"натријум-хлорид"},
+    {formula:"K2SO4", name:"калијум-сулфат"},
+    {formula:"CaCO3", name:"калцијум-карбонат"},
+    {formula:"CuSO4", name:"бакар(II)-сулфат"}
+  ]},
+  {name:"Мешано", items:[
+    {formula:"HNO3", name:"азотна киселина"},
+    {formula:"Ba(OH)2", name:"баријум-хидроксид"},
+    {formula:"FeCl3", name:"гвожђе(III)-хлорид"},
+    {formula:"CO2", name:"угљеник(IV)-оксид"}
+  ]}
+];
+
+let currentLevel = 0;
+let selectedFormula = null;
+let correctCount = 0;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function renderLevel() {
+  const level = levels[currentLevel];
+  document.getElementById("level-info").textContent = "Ниво: " + level.name;
+  document.getElementById("message").textContent = "";
+  const fDiv = document.getElementById("formulas");
+  const nDiv = document.getElementById("names");
+  fDiv.innerHTML = "";
+  nDiv.innerHTML = "";
+  correctCount = 0;
+
+  const formulas = [...level.items];
+  const names = [...level.items];
+  shuffle(formulas);
+  shuffle(names);
+
+  formulas.forEach(item => {
+    const f = document.createElement("div");
+    f.className = "item";
+    f.innerHTML = formatFormula(item.formula);
+    f.onclick = () => selectFormula(item, f);
+    fDiv.appendChild(f);
+  });
+
+  names.forEach(item => {
+    const n = document.createElement("div");
+    n.className = "item";
+    n.textContent = item.name;
+    n.onclick = () => checkMatch(item, n);
+    nDiv.appendChild(n);
+  });
+}
+
+function selectFormula(item, el) {
+  if (selectedFormula) selectedFormula.element.classList.remove("selected");
+  selectedFormula = {data:item, element:el};
+  el.classList.add("selected");
+}
+
+function checkMatch(item, el) {
+  if (!selectedFormula) return;
+  if (selectedFormula.data.name === item.name) {
+    selectedFormula.element.classList.add("correct");
+    el.classList.add("correct");
+    setTimeout(() => {
+      selectedFormula.element.remove();
+      el.remove();
+      selectedFormula = null;
+      correctCount++;
+      if (correctCount === levels[currentLevel].items.length) {
+        document.getElementById("message").textContent = "Браво! Прелазиш на следећи ниво!";
+        setTimeout(() => {
+          currentLevel++;
+          if (currentLevel < levels.length) {
+            renderLevel();
+          } else {
+            document.getElementById("message").textContent = "Сјајно! Завршио си све нивое!";
+          }
+        }, 1500);
+      }
+    }, 800);
+  } else {
+    selectedFormula.element.classList.add("wrong");
+    el.classList.add("wrong");
+    setTimeout(() => {
+      selectedFormula.element.classList.remove("wrong");
+      el.classList.remove("wrong");
+      selectedFormula.element.classList.remove("selected");
+      selectedFormula = null;
+    }, 800);
+  }
+}
+
+renderLevel();
+</script>
+</body>
+</html>
